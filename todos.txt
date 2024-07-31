@@ -1,2 +1,2 @@
-Buy groceries,done
-Clean the house,not_done
+Buy groceries,high,2024-08-01,shopping|urgent,done
+Clean the house,medium,,home|chores,not_done

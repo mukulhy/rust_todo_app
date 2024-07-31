@@ -1,0 +1,5 @@
+cargo run add "Buy groceries" "high" "2024-08-01" "shopping|urgent"
+cargo run add "Clean the house" "medium" "" "home|chores"
+cargo run list
+cargo run done 0
+cargo run list

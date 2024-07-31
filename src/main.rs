@@ -3,7 +3,8 @@
 mod todo;
 
 use std::env;
-use todo::{Todo, load_todos, save_todos};
+use todo::{Todo, load_todos, save_todos, parse_date};
+use chrono::NaiveDate;
 
 const FILENAME: &str = "todos.txt";
 
@@ -20,13 +21,20 @@ fn main() {
 
     match command.as_str() {
         "add" => {
-            if args.len() < 3 {
-                eprintln!("Usage: todo_app add <description>");
+            if args.len() < 5 {
+                eprintln!("Usage: todo_app add <description> <priority> <due_date> <categories>");
                 return;
             }
-            let description = args[2..].join(" ");
+            let description = args[2].clone();
+            let priority = args[3].clone();
+            let due_date = if args[4].is_empty() {
+                None
+            } else {
+                Some(parse_date(&args[4]).expect("Invalid date format"))
+            };
+            let categories: Vec<String> = args[5].split('|').map(String::from).collect();
             let id = todos.len();
-            let todo = Todo::new(id, description);
+            let todo = Todo::new(id, description, priority, due_date, categories);
             todos.push(todo);
             save_todos(FILENAME, &todos).expect("Failed to save todos");
             println!("Todo added.");

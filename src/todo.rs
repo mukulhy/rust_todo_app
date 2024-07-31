@@ -2,19 +2,26 @@
 
 use std::fs::{File, OpenOptions};
 use std::io::{self, BufRead, BufReader, Write};
+use chrono::{NaiveDate, ParseError};
 
 #[derive(Debug)]
 pub struct Todo {
     pub id: usize,
     pub description: String,
+    pub priority: String,
+    pub due_date: Option<NaiveDate>,
+    pub categories: Vec<String>,
     pub done: bool,
 }
 
 impl Todo {
-    pub fn new(id: usize, description: String) -> Todo {
+    pub fn new(id: usize, description: String, priority: String, due_date: Option<NaiveDate>, categories: Vec<String>) -> Todo {
         Todo {
             id,
             description,
+            priority,
+            due_date,
+            categories,
             done: false,
         }
     }
@@ -22,6 +29,10 @@ impl Todo {
     pub fn mark_done(&mut self) {
         self.done = true;
     }
+}
+
+pub fn parse_date(date_str: &str) -> Result<NaiveDate, ParseError> {
+    NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
 }
 
 pub fn load_todos(filename: &str) -> io::Result<Vec<Todo>> {
@@ -40,11 +51,19 @@ pub fn load_todos(filename: &str) -> io::Result<Vec<Todo>> {
     for (id, line) in reader.lines().enumerate() {
         let line = line?;
         let parts: Vec<&str> = line.split(',').collect();
-        if parts.len() == 2 {
+        if parts.len() == 5 {
+            let due_date = if parts[2].is_empty() {
+                None
+            } else {
+                Some(parse_date(parts[2]).unwrap())
+            };
             let todo = Todo {
                 id,
                 description: parts[0].to_string(),
-                done: parts[1] == "done",
+                priority: parts[1].to_string(),
+                due_date,
+                categories: parts[3].split('|').map(String::from).collect(),
+                done: parts[4] == "done",
             };
             todos.push(todo);
         }
@@ -57,7 +76,9 @@ pub fn save_todos(filename: &str, todos: &Vec<Todo>) -> io::Result<()> {
     let mut file = OpenOptions::new().write(true).truncate(true).open(filename)?;
     for todo in todos {
         let status = if todo.done { "done" } else { "not_done" };
-        writeln!(file, "{},{}", todo.description, status)?;
+        let due_date = todo.due_date.map_or(String::new(), |d| d.to_string());
+        let categories = todo.categories.join("|");
+        writeln!(file, "{},{},{},{},{}", todo.description, todo.priority, due_date, categories, status)?;
     }
     Ok(())
 }
