@@ -22,9 +22,6 @@ A simple command-line TODO application written in Rust. This project demonstrate
    cd rust-todo-app
    
 ## Build the project:
-
-sh
-Copy code
 cargo build
 
 ## To add a todo
